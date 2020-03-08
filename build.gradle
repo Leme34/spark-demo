@@ -1,0 +1,70 @@
+buildscript {
+    ext {
+        sparkVersion = "2.1.2"
+        scalaVersion = "2.11"
+        springBootVersion = "2.2.5.RELEASE"
+        codehausVersion = "3.0.8"
+        elasticsearchVersion = "7.5.2"
+    }
+    repositories {
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+        classpath "io.spring.gradle:dependency-management-plugin:1.0.9.RELEASE"
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+
+group 'com.lsd'
+version '1.0-SNAPSHOT'
+sourceCompatibility = 1.8
+
+repositories {
+    // 优先使用国内源
+    maven { url 'https://maven.aliyun.com/repository/public' }
+    mavenCentral()
+}
+
+
+dependencies {
+    implementation "org.codehaus.janino:commons-compiler:${codehausVersion}"
+    implementation "org.codehaus.janino:janino:${codehausVersion}"
+
+    implementation("org.apache.spark:spark-core_${scalaVersion}:${sparkVersion}") {
+        exclude group: 'io.netty', module: 'netty-all'
+    }
+    implementation "io.netty:netty-all:4.0.43.Final"
+    implementation "org.apache.spark:spark-streaming_${scalaVersion}:${sparkVersion}"
+    implementation "org.apache.spark:spark-sql_${scalaVersion}:${sparkVersion}"
+    implementation "org.apache.spark:spark-hive_${scalaVersion}:${sparkVersion}"
+    implementation "org.apache.spark:spark-mllib_${scalaVersion}:${sparkVersion}"
+    implementation "com.google.code.gson:gson:2.8.6"
+    implementation "org.scala-lang:scala-library:2.11.8"
+    compileOnly 'org.projectlombok:lombok:1.18.12'
+    annotationProcessor 'org.projectlombok:lombok:1.18.12'
+
+    implementation("org.springframework.boot:spring-boot-starter-data-elasticsearch")
+    implementation "org.springframework.boot:spring-boot-starter-web"
+    implementation "org.springframework.boot:spring-boot-starter-thymeleaf"
+    implementation "org.springframework.boot:spring-boot-configuration-processor"
+    implementation("org.springframework.boot:spring-boot-starter-data-redis")
+    testCompile "org.springframework.boot:spring-boot-starter-test"
+
+    implementation "org.elasticsearch:elasticsearch:${elasticsearchVersion}"
+    implementation "org.elasticsearch.client:elasticsearch-rest-client-sniffer:${elasticsearchVersion}"
+    implementation "org.elasticsearch.client:elasticsearch-rest-client:${elasticsearchVersion}"
+    implementation "org.elasticsearch.client:elasticsearch-rest-high-level-client:${elasticsearchVersion}"
+    implementation ("org.elasticsearch:elasticsearch-hadoop:${elasticsearchVersion}")
+
+}
+
+configurations.all {
+    exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+    exclude group: 'org.slf4j', module: 'jul-to-slf4j'
+    exclude group: 'org.slf4j', module: 'jcl-over-slf4j'
+}
