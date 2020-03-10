@@ -1,13 +1,14 @@
 package com.lsd.etl.itag.data_graphics_etl;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.lsd.etl.itag.util.SparkETLUtils;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -18,47 +19,52 @@ import java.util.stream.Collectors;
  * Created by lsd
  * 2020-03-03 21:26
  */
+@Component
 public class UserHeatETL {
 
-    private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
-    private static final SparkSession session = SparkETLUtils.initSparkSession4Hive();
+    @Autowired
+    private Gson gson;
+    @Autowired
+    private SparkSession session;
+    @Autowired
+    private SparkETLUtils sparkETLUtils;
 
-    public static void main(String[] args) {
-        MemberVo vo = new MemberVo()
-                .setMemberSexes(memberSex())
-                .setMemberChannels(memberRegChannel())
-                .setMemberMpSubs(memberMpSubscribe())
-                .setMemberHeat(memberHeat());
-        System.out.println("ETL Result = " + gson.toJson(vo));
-    }
+//    public static void main(String[] args) {
+//        MemberVo vo = new MemberVo()
+//                .setMemberSexes(memberSex())
+//                .setMemberChannels(memberRegChannel())
+//                .setMemberMpSubs(memberMpSubscribe())
+//                .setMemberHeat(memberHeat());
+//        System.out.println("ETL Result = " + gson.toJson(vo));
+//    }
 
     /**
      * 按性别分组统计
      * -1:未知 1:男 2:女
      */
-    public static List<MemberSex> memberSex() {
+    public List<MemberSex> memberSex() {
         String sql = "select sex as memberSex,count(id) as sexCount from i_member.t_member group by sex";
-        return SparkETLUtils.execAndCollectAsList(session, sql, MemberSex.class);
+        return sparkETLUtils.execAndCollectAsList(session, sql, MemberSex.class);
     }
 
     /**
      * 按会员注册渠道分组统计
      * 1:IOS 2:android 3:微信小程序 4:微信公众号 5:h5
      */
-    public static List<MemberChannel> memberRegChannel() {
+    public List<MemberChannel> memberRegChannel() {
         String sql = "select member_channel as memberChannel, count(id) as channelCount from i_member.t_member group by member_channel";
-        return SparkETLUtils.execAndCollectAsList(session, sql, MemberChannel.class);
+        return sparkETLUtils.execAndCollectAsList(session, sql, MemberChannel.class);
     }
 
     /**
      * 按 是否关注了微信公众号（mp_open_id是否为空） 分组统计
      * 注意默认情况下Sqoop导入的null会变为"null"
      */
-    public static List<MemberMpSub> memberMpSubscribe() {
+    public List<MemberMpSub> memberMpSubscribe() {
         String sql = "select count(if(mp_open_id !='null',id,null)) as subCount," +  //已关注微信公众号
                 "count(if(mp_open_id ='null',id,null)) as unSubCount " +    //未关注微信公众号
                 "from i_member.t_member";
-        return SparkETLUtils.execAndCollectAsList(session, sql, MemberMpSub.class);
+        return sparkETLUtils.execAndCollectAsList(session, sql, MemberMpSub.class);
     }
 
     /**
@@ -70,7 +76,7 @@ public class UserHeatETL {
      * orderAgain: 有回购记录的用户，目标表：i_order.t_order，条件：t.orderCount >= 2
      * coupon:     有领券记录的用户，目标表：i_marketing.t_coupon_member，条件：count(distinct member_id)
      */
-    public static MemberHeat memberHeat() {
+    public MemberHeat memberHeat() {
         Dataset<Row> reg_complete = session.sql(
                 "select count(if(phone='null',id,null)) as reg," +
                         "count(if(phone !='null',id,null)) as complete" +

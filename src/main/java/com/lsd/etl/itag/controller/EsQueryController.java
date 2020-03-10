@@ -1,7 +1,8 @@
 package com.lsd.etl.itag.controller;
 
+import com.google.gson.*;
 import com.lsd.etl.itag.dto.TagDto;
-import com.lsd.etl.itag.es.EsMemberTagETL;
+import com.lsd.etl.itag.service.MemberTagETLService;
 import com.lsd.etl.itag.service.EsService;
 import com.lsd.etl.itag.vo.MemberTag;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +17,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedOutputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -29,7 +31,9 @@ public class EsQueryController {
     @Autowired
     private EsService esService;
     @Autowired
-    private EsMemberTagETL esMemberTagETL;
+    private MemberTagETLService memberTagETLService;
+    @Autowired
+    private Gson gson;
 
     /**
      * 用户数据清洗并存入ES中
@@ -37,7 +41,7 @@ public class EsQueryController {
     @RequestMapping("/index")
     @ResponseBody
     public String etlAndIndex() {
-        esMemberTagETL.etlAndIndex();
+        memberTagETLService.etlAndIndex();
         return "success";
     }
 
@@ -46,8 +50,10 @@ public class EsQueryController {
      * 查询并生成文本文件
      */
     @RequestMapping("/gen")
-    public void queryAndGen(@RequestBody List<TagDto> tagList, HttpServletResponse response) {
-        final List<MemberTag> memberTags = esService.query(tagList);
+    public void queryAndGen(@RequestBody String tagsJson, HttpServletResponse response) {
+        List<TagDto> tagList = parseJson(tagsJson);
+        // 查询es
+        List<MemberTag> memberTags = esService.query(tagList);
         String txtFileContent = totxtFileContent(memberTags);
         try (
                 ServletOutputStream os = response.getOutputStream();
@@ -59,6 +65,17 @@ public class EsQueryController {
         } catch (Exception e) {
             log.error("导出文本文件失败", e);
         }
+    }
+
+
+    private List<TagDto> parseJson(String tagsJson) {
+        List<TagDto> tagList = new ArrayList<>();
+        final JsonArray jsonArray = JsonParser.parseString(tagsJson).getAsJsonObject().get("selectedTags").getAsJsonArray();
+        for (JsonElement jsonElement : jsonArray) {
+            final TagDto tagDto = gson.fromJson(jsonElement, TagDto.class);
+            tagList.add(tagDto);
+        }
+        return tagList;
     }
 
 

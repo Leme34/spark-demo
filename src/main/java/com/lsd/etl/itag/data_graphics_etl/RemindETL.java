@@ -6,6 +6,8 @@ import com.lsd.etl.itag.util.DateUtils;
 import com.lsd.etl.itag.util.SparkETLUtils;
 import lombok.Data;
 import org.apache.spark.sql.SparkSession;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.Month;
@@ -19,22 +21,25 @@ import java.util.List;
  * Created by lsd
  * 2020-03-04 17:28
  */
+@Component
 public class RemindETL {
 
-    private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
-    private static final SparkSession session = SparkETLUtils.initSparkSession4Hive();
+    @Autowired
+    private SparkSession session;
+    @Autowired
+    private SparkETLUtils sparkETLUtils;
 
-    public static void main(String[] args) {
-        System.out.println("freeReminderList = " + gson.toJson(freeReminderList()));
-        System.out.println("couponReminders = " + gson.toJson(couponReminders()));
-    }
+//    public static void main(String[] args) {
+//        System.out.println("freeReminderList = " + gson.toJson(freeReminderList()));
+//        System.out.println("couponReminders = " + gson.toJson(couponReminders()));
+//    }
 
     /**
      * 最近一周"首单免费优惠券"的领券情况
      *
      * @return 前n天(n < = 7)当天领取"首单免费优惠券"的人数
      */
-    public static List<FreeReminder> freeReminderList() {
+    public List<FreeReminder> freeReminderList() {
         // 测试数据的日期最新时间是2019.10.30
         LocalDate now = LocalDate.of(2019, Month.NOVEMBER, 30);
         Date nowDate = DateUtils.localDate2Date(now);
@@ -49,7 +54,7 @@ public class RemindETL {
                         " group by date_format(create_time,'yyyy-MM-dd')",
                 DateUtils.format(pickDate, DateUtils.DATE_TIME_PATTERN)
         );
-        return SparkETLUtils.execAndCollectAsList(session, sql, FreeReminder.class);
+        return sparkETLUtils.execAndCollectAsList(session, sql, FreeReminder.class);
     }
 
     /**
@@ -57,7 +62,7 @@ public class RemindETL {
      *
      * @return 前n天(n < = 7)当天领取"非首单免费优惠券"的人数
      */
-    public static List<CouponReminder> couponReminders() {
+    public List<CouponReminder> couponReminders() {
         // 测试数据的日期最新时间是2019.10.30
         LocalDate now = LocalDate.of(2019, Month.NOVEMBER, 30);
         Date nowDate = DateUtils.localDate2Date(now);
@@ -71,7 +76,7 @@ public class RemindETL {
                         " group by date_format(create_time,'yyyy-MM-dd')",
                 DateUtils.format(pickDate, DateUtils.DATE_TIME_PATTERN)
         );
-        return SparkETLUtils.execAndCollectAsList(session, sql, CouponReminder.class);
+        return sparkETLUtils.execAndCollectAsList(session, sql, CouponReminder.class);
     }
 
 

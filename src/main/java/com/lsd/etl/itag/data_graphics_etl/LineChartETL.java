@@ -9,6 +9,7 @@ import lombok.Data;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import org.springframework.beans.factory.annotation.Autowired;
 import scala.Tuple2;
 
 import java.math.BigDecimal;
@@ -27,19 +28,21 @@ import java.util.stream.Collectors;
  */
 public class LineChartETL {
 
-    private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
-    private static final SparkSession session = SparkETLUtils.initSparkSession4Hive();
+    @Autowired
+    private Gson gson;
+    @Autowired
+    private SparkSession session;
 
-    public static void main(String[] args) {
-        System.out.println("LineChartETL = " + gson.toJson(lineVos()));
-    }
+//    public static void main(String[] args) {
+//        System.out.println("LineChartETL = " + gson.toJson(lineVos()));
+//    }
 
     /**
      * ETL求得每天的折线图Vo数据
      *
      * @return 周一~七的折线图Vo数据
      */
-    public static List<LineVo> lineVos() {
+    public List<LineVo> lineVos() {
         LocalDate now = LocalDate.of(2019, Month.NOVEMBER, 30);// 测试数据的日期最新时间是2019.10.30
         Date nowDate = DateUtils.localDate2Date(now);
         Date sevenDaysBefore = DateUtils.addDateDays(nowDate, -8);

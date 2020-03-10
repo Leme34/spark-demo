@@ -6,6 +6,8 @@ import com.lsd.etl.itag.util.DateUtils;
 import com.lsd.etl.itag.util.SparkETLUtils;
 import lombok.Data;
 import org.apache.spark.sql.SparkSession;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.Month;
@@ -18,23 +20,28 @@ import java.util.List;
  * Created by lsd
  * 2020-03-04 14:20
  */
+@Component
 public class WeekOnWeekETL {
 
-    private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
-    private static final SparkSession session = SparkETLUtils.initSparkSession4Hive();
+    @Autowired
+    private Gson gson;
+    @Autowired
+    private SparkSession session;
+    @Autowired
+    private SparkETLUtils sparkETLUtils;
 
 
-    public static void main(String[] args) {
-        System.out.println("registerCount result = " + gson.toJson(registerCount()));
-        System.out.println("orderCount result = " + gson.toJson(orderCount()));
-    }
+//    public static void main(String[] args) {
+//        System.out.println("registerCount result = " + gson.toJson(registerCount()));
+//        System.out.println("orderCount result = " + gson.toJson(orderCount()));
+//    }
 
     /**
      * 最近一周（前7天到前14天）注册量ETL
      *
      * @return 每天的注册量
      */
-    public static List<Reg> registerCount() {
+    public List<Reg> registerCount() {
         // 测试数据的日期最新时间是2019.10.30
         LocalDate now = LocalDate.of(2019, Month.NOVEMBER, 30);
         Date nowDate = DateUtils.localDate2Date(now);
@@ -50,7 +57,7 @@ public class WeekOnWeekETL {
                 DateUtils.format(twoWeeksAgo, DateUtils.DATE_TIME_PATTERN),
                 DateUtils.format(lastWeek, DateUtils.DATE_TIME_PATTERN)
         );
-        return SparkETLUtils.execAndCollectAsList(session, sql, Reg.class);
+        return sparkETLUtils.execAndCollectAsList(session, sql, Reg.class);
     }
 
     /**
@@ -58,7 +65,7 @@ public class WeekOnWeekETL {
      *
      * @return 每天的订单量
      */
-    public static List<Order> orderCount() {
+    public List<Order> orderCount() {
         // 测试数据的日期最新时间是2019.11.30
         LocalDate now = LocalDate.of(2019, Month.NOVEMBER, 30);
         Date nowDate = DateUtils.localDate2Date(now);
@@ -73,7 +80,7 @@ public class WeekOnWeekETL {
                 DateUtils.format(twoWeeksAgo, DateUtils.DATE_TIME_PATTERN),
                 DateUtils.format(lastWeek, DateUtils.DATE_TIME_PATTERN)
         );
-        return SparkETLUtils.execAndCollectAsList(session, sql, Order.class);
+        return sparkETLUtils.execAndCollectAsList(session, sql, Order.class);
     }
 
 

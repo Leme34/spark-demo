@@ -1,4 +1,4 @@
-package com.lsd.etl.itag.es;
+package com.lsd.etl.itag.service;
 
 import com.google.gson.Gson;
 import com.lsd.etl.itag.service.EsService;
@@ -20,18 +20,16 @@ import java.util.List;
  * 2020-03-05 19:15
  */
 @Component
-public class EsMemberTagETL {
+public class MemberTagETLService {
 
     private static SparkSession session;
     @Autowired
     private Gson gson;
     @Autowired
     private EsService esService;
+    @Autowired
+    private SparkETLUtils sparkETLUtils;
 
-    @PostConstruct
-    public void init() {
-        session = SparkETLUtils.initSparkSession4ES();
-    }
 
 //    public static void main(String[] args) {
 //        etlAndIndex();
@@ -135,7 +133,7 @@ public class EsMemberTagETL {
                 " left join chargeMoney as cm on m.memberId = cm.memberId" +
                 " left join overTime as ot on m.memberId = ot.memberId" +
                 " left join feedback as f on m.memberId = f.memberId";
-        List<MemberTag> memberTags = SparkETLUtils.execAndCollectAsList(session, sql, MemberTag.class);
+        List<MemberTag> memberTags = sparkETLUtils.execAndCollectAsList(session, sql, MemberTag.class);
 //        System.out.println(memberTags);
 
         esService.saveToEs(memberTags);

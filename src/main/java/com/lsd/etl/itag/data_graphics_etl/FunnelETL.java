@@ -8,6 +8,8 @@ import lombok.experimental.Accessors;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 /**
  * 漏斗图ETL
@@ -16,20 +18,23 @@ import org.apache.spark.sql.SparkSession;
  * Created by lsd
  * 2020-03-05 09:09
  */
+@Component
 public class FunnelETL {
 
-    private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
-    private static final SparkSession session = SparkETLUtils.initSparkSession4Hive();
+    @Autowired
+    private Gson gson;
+    @Autowired
+    private SparkSession session;
 
-    public static void main(String[] args) {
-        System.out.println("FunnelETL = " + gson.toJson(funnel()));
-    }
+//    public static void main(String[] args) {
+//        System.out.println("FunnelETL = " + gson.toJson(funnel()));
+//    }
 
 
     /**
      * 漏斗图ETL
      */
-    public static FunnelVo funnel() {
+    public FunnelVo funnel() {
         // 测试环境模拟 展现人数,1000 点击人数,800 加入购物车人数,600
         // 真实环境应该是加入检测用户行为模块收集的数据
 
